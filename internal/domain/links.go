@@ -58,6 +58,10 @@ func NewLinkBatch(id BatchID, urls []string) (*LinkBatch, error) {
 		})
 	}
 
+	if len(links) == 0 {
+		return nil, errors.New("no valid urls provided")
+	}
+
 	results := make([]LinkResult, 0, len(links))
 	for _, link := range links {
 		results = append(results, LinkResult{
@@ -67,5 +71,46 @@ func NewLinkBatch(id BatchID, urls []string) (*LinkBatch, error) {
 		})
 	}
 
-	
+	return &LinkBatch{
+		ID: id,
+		Links: links,
+		Results: results,
+		Status: BatchStatusCreated,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}, nil
+}
+
+func (b *LinkBatch) allLinksProcessed() bool {
+	for _, result := range b.Results {
+		if result.Status == StatusUnknown {
+			return false
+		}
+	}
+	return true
+}
+
+func (b *LinkBatch) StartProcessing() error {
+	if b.Status != BatchStatusCreated {
+		return errors.New("batch must be in 'created' status")
+	}
+	b.Status = BatchStatusInProgress
+	b.UpdatedAt = time.Now()
+	return nil
+}
+
+func (b *LinkBatch) SetResults(url string, status LinkStatus, errText string) {
+	for i, link := range b.Links {
+		if link.URL == url {
+			b.Results[i].Status = status
+			b.Results[i].Error = errText
+			b.UpdatedAt = time.Now()
+			break
+		}
+	}
+
+	if b.Status == BatchStatusInProgress && b.allLinksProcessed() {
+		b.Status = BatchStatusDone
+		b.UpdatedAt = time.Now()
+	}
 }
