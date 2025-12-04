@@ -8,7 +8,7 @@ import (
 
 type BatchRepository interface {
 	// Вернуть новый id для батча
-	NextBatchD(ctx context.Context) (domain.BatchID, error)
+	NextBatchID(ctx context.Context) (domain.BatchID, error)
 	// Сохранить или обновить батч
 	SaveBatch(ctx context.Context, batch *domain.LinkBatch) error
 	// Получить батч по id
@@ -23,13 +23,47 @@ type Checker interface {
 }
 
 type LinksService struct {
-	Repo BatchRepository
-	Checker Checker
+	repo BatchRepository
+	checker Checker
 }
 
-func NewLinkService(repo BatchRepository, checker Checker) *LinksService {
+func NewLinksService(repo BatchRepository, checker Checker) *LinksService {
 	return &LinksService{
-		Repo: repo,
-		Checker: checker,
+		repo: repo,
+		checker: checker,
 	}
+}
+
+func (s *LinksService) CreateAndCheckBatch(ctx context.Context, urls []string) (*domain.LinkBatch, error) {
+	batchID, err := s.repo.NextBatchID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	batch, err := domain.NewLinkBatch(batchID, urls)
+	if err != nil {
+		return nil, err
+	}
+	
+	if err := s.repo.SaveBatch(ctx, batch); err != nil {
+		return nil, err
+	}
+
+	if err := batch.StartProcessing(); err != nil {
+		return nil, err
+	}
+
+	if err := s.repo.SaveBatch(ctx, batch); err != nil {
+		return nil, err
+	}
+
+	if err := s.checker.CheckBatch(ctx, batch); err != nil {
+		return nil, err
+	}
+
+	updated, err := s.repo.GetBatch(ctx, batch.ID)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
