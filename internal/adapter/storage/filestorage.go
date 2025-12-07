@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/mikail-tommard/2025-12-10-links/internal/domain"
@@ -77,7 +78,9 @@ func (r *FileBatchRepository) saveState() error {
 		Batches: batches,
 	}
 
-	tmpFile, err := os.CreateTemp(r.filepath, "batch-state-*.tmp")
+	dir := filepath.Dir(r.filepath)
+
+	tmpFile, err := os.CreateTemp(dir, "batch-state-*.tmp")
 	if err != nil {
 		return err
 	}

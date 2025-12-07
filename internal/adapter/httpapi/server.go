@@ -31,7 +31,7 @@ type linkResultResponse struct {
 
 type linkResponse struct {
 	LinksNum int                  `json:"links_num"`
-	Results []linkResultResponse `json:"results"`
+	Results  []linkResultResponse `json:"results"`
 }
 
 func NewServer(link *usecase.LinksService, report *usecase.ReportService) *Server {
@@ -48,7 +48,7 @@ func NewServer(link *usecase.LinksService, report *usecase.ReportService) *Serve
 
 func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/links", s.handleLinks)
-	s.mux.HandleFunc("/report", nil)
+	s.mux.HandleFunc("/report", s.handleReport)
 }
 
 func (s *Server) Handler() http.Handler {
@@ -70,27 +70,27 @@ func (s *Server) handleLinks(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "link_list must not be empty", http.StatusBadRequest)
 		return
 	}
-	
+
 	ctx := r.Context()
-	
+
 	batch, err := s.linksService.CreateAndCheckBatch(ctx, req.LinksList)
 	if err != nil {
-		http.Error(w, "Failed to create batch", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	respResult := make([]linkResultResponse, 0, len(batch.Results))
 	for _, r := range batch.Results {
 		respResult = append(respResult, linkResultResponse{
-			URL: r.Link.URL,
+			URL:    r.Link.URL,
 			Status: string(r.Status),
-			Error: r.Error,
+			Error:  r.Error,
 		})
 	}
 
 	resp := linkResponse{
 		LinksNum: int(batch.ID),
-		Results: respResult,
+		Results:  respResult,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -122,7 +122,7 @@ func (s *Server) handleReport(w http.ResponseWriter, r *http.Request) {
 	for _, v := range req.LinksNum {
 		ids = append(ids, domain.BatchID(v))
 	}
-	
+
 	ctx := r.Context()
 	bytes, err := s.reportService.GenerateReportForBatches(ctx, ids)
 	if err != nil {
