@@ -11,28 +11,28 @@ import (
 )
 
 type FileBatchRepository struct {
-	mu sync.RWMutex
-	batches map[domain.BatchID]*domain.LinkBatch
-	nextID domain.BatchID
+	mu       sync.RWMutex
+	batches  map[domain.BatchID]*domain.LinkBatch
+	nextID   domain.BatchID
 	filepath string
 }
 
 type batchState struct {
-	NextID domain.BatchID `json:"next_id"`
+	NextID  domain.BatchID      `json:"next_id"`
 	Batches []*domain.LinkBatch `json:"batches"`
 }
 
 func NewFileBatchRepository(filepath string) (*FileBatchRepository, error) {
 	r := &FileBatchRepository{
-		batches: map[domain.BatchID]*domain.LinkBatch{},
-		nextID: 0,
+		batches:  map[domain.BatchID]*domain.LinkBatch{},
+		nextID:   0,
 		filepath: filepath,
 	}
 
 	if err := r.loadState(); err != nil {
 		return nil, err
 	}
-	
+
 	return r, nil
 }
 
@@ -73,7 +73,7 @@ func (r *FileBatchRepository) saveState() error {
 	}
 
 	state := batchState{
-		NextID: r.nextID,
+		NextID:  r.nextID,
 		Batches: batches,
 	}
 
@@ -106,7 +106,7 @@ func (r *FileBatchRepository) SaveBatch(ctx context.Context, batch *domain.LinkB
 	defer r.mu.Unlock()
 
 	r.batches[batch.ID] = batch
-	
+
 	if batch.ID >= r.nextID {
 		r.nextID = batch.ID + 1
 	}
@@ -122,7 +122,7 @@ func (r *FileBatchRepository) GetBatch(ctx context.Context, id domain.BatchID) (
 	if !ok {
 		return nil, fmt.Errorf("batch %d not found", id)
 	}
-	
+
 	return batch, nil
 }
 

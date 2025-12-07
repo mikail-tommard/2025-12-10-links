@@ -12,8 +12,8 @@ import (
 )
 
 type HTTPChecker struct {
-	repo usecase.BatchRepository
-	client *http.Client
+	repo       usecase.BatchRepository
+	client     *http.Client
 	maxWorkers int
 }
 
@@ -27,8 +27,8 @@ func NewHTTPChecker(repo usecase.BatchRepository, timeout time.Duration, maxWork
 	}
 
 	return &HTTPChecker{
-		repo: repo,
-		client: &client,
+		repo:       repo,
+		client:     &client,
 		maxWorkers: maxWorkers,
 	}
 }
@@ -43,7 +43,7 @@ func (c *HTTPChecker) CheckBatch(ctx context.Context, batch *domain.LinkBatch) e
 
 		go func(url string) {
 			defer wg.Done()
-			defer func(){<-sem}()
+			defer func() { <-sem }()
 
 			status := domain.StatusUnavailable
 			errText := ""
@@ -69,7 +69,7 @@ func (c *HTTPChecker) CheckBatch(ctx context.Context, batch *domain.LinkBatch) e
 			} else {
 				errText = fmt.Sprintf("unepexted status code: %d", resp.StatusCode)
 			}
-			
+
 			batch.SetResults(url, status, errText)
 		}(link.URL)
 	}

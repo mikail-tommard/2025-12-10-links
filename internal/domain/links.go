@@ -10,16 +10,16 @@ type LinkStatus string
 type BatchStatus string
 
 const (
-	StatusUnknown LinkStatus = "unknown"
-	StatusAvailable LinkStatus = "available"
+	StatusUnknown     LinkStatus = "unknown"
+	StatusAvailable   LinkStatus = "available"
 	StatusUnavailable LinkStatus = "unavailable"
 )
 
 const (
-	BatchStatusCreated BatchStatus = "created"
+	BatchStatusCreated    BatchStatus = "created"
 	BatchStatusInProgress BatchStatus = "in_progress"
-	BatchStatusDone BatchStatus = "done"
-	BatchStatusFailed BatchStatus = "failed"
+	BatchStatusDone       BatchStatus = "done"
+	BatchStatusFailed     BatchStatus = "failed"
 )
 
 type Link struct {
@@ -27,16 +27,16 @@ type Link struct {
 }
 
 type LinkResult struct {
-	Link Link
+	Link   Link
 	Status LinkStatus
-	Error string
+	Error  string
 }
 
 type LinkBatch struct {
-	ID BatchID
-	Links []Link
-	Results []LinkResult
-	Status BatchStatus
+	ID        BatchID
+	Links     []Link
+	Results   []LinkResult
+	Status    BatchStatus
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -65,17 +65,17 @@ func NewLinkBatch(id BatchID, urls []string) (*LinkBatch, error) {
 	results := make([]LinkResult, 0, len(links))
 	for _, link := range links {
 		results = append(results, LinkResult{
-			Link: link,
+			Link:   link,
 			Status: StatusUnknown,
-			Error: "",
+			Error:  "",
 		})
 	}
 
 	return &LinkBatch{
-		ID: id,
-		Links: links,
-		Results: results,
-		Status: BatchStatusCreated,
+		ID:        id,
+		Links:     links,
+		Results:   results,
+		Status:    BatchStatusCreated,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}, nil

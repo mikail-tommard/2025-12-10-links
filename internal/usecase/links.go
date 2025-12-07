@@ -23,13 +23,13 @@ type Checker interface {
 }
 
 type LinksService struct {
-	repo BatchRepository
+	repo    BatchRepository
 	checker Checker
 }
 
 func NewLinksService(repo BatchRepository, checker Checker) *LinksService {
 	return &LinksService{
-		repo: repo,
+		repo:    repo,
 		checker: checker,
 	}
 }
@@ -44,7 +44,7 @@ func (s *LinksService) CreateAndCheckBatch(ctx context.Context, urls []string) (
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if err := s.repo.SaveBatch(ctx, batch); err != nil {
 		return nil, err
 	}

@@ -11,13 +11,13 @@ type ReportGenerator interface {
 }
 
 type ReportService struct {
-	repo BatchRepository
+	repo     BatchRepository
 	reporter ReportGenerator
 }
 
 func NewReportService(repo BatchRepository, reported ReportGenerator) *ReportService {
 	return &ReportService{
-		repo: repo,
+		repo:     repo,
 		reporter: reported,
 	}
 }
